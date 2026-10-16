@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/huchenme/github-trending-api",
+  "commit": "c23aab9a0a55e3528459a73d8eb55194171bc2de",
+  "sourceArchive": "https://codeload.github.com/huchenme/github-trending-api/zip/refs/heads/master",
+  "importedOn": "2026-10-15",
+  "verifiedFile": "src/functions/utils/fetch.js",
+  "verifiedFileSha256": "8b4de46cea0006771b0c84825b14e137975a51e2f1ebb5ac54461bfe417f34f1",
+  "license": "MIT"
+}

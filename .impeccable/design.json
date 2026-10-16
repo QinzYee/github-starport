@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T07:38:20.5888566Z",
+  "title": "Design System: Starport",
+  "extensions": {
+    "shadows": [
+      {
+        "name": "toast",
+        "purpose": "Transient feedback only.",
+        "value": "0 8px 28px #203e3229"
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-background",
+        "purpose": "Button background state changes.",
+        "value": "background .15s"
+      },
+      {
+        "name": "selection-acknowledgement",
+        "purpose": "One acknowledgement on a newly selected row.",
+        "value": ".35s cubic-bezier(.16,1,.3,1)"
+      },
+      {
+        "name": "reduced-motion",
+        "purpose": "Applied when prefers-reduced-motion is reduce.",
+        "value": "animation-duration: .01ms; transition: none; scroll-behavior: auto"
+      }
+    ],
+    "breakpoints": [
+      {
+        "value": "1600px",
+        "name": "wide-min"
+      },
+      {
+        "value": "1200px",
+        "name": "compact-max"
+      },
+      {
+        "value": "960px",
+        "name": "rail-max"
+      },
+      {
+        "value": "720px",
+        "name": "mobile-max"
+      }
+    ]
+  },
+  "components": [
+    {
+      "css": ".ds-primary{font:550 12px \"Segoe UI\",\"Microsoft YaHei\",sans-serif;min-height:36px;padding:8px 13px;border:0;border-radius:7px;background:var(--green,#18725b);color:#fff;cursor:pointer;transition:background .15s}.ds-primary:hover:not(:disabled){background:var(--green-dark,#105940)}.ds-primary:focus-visible{outline:3px solid #8fbcaa;outline-offset:3px}.ds-primary:disabled{opacity:.48;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}",
+      "description": "Download and primary actions.",
+      "refersTo": "button-primary",
+      "kind": "button",
+      "name": "Primary Button",
+      "html": "<button class=\"ds-primary\">下载 2 个项目</button>"
+    },
+    {
+      "css": ".ds-secondary{font:550 12px \"Segoe UI\",\"Microsoft YaHei\",sans-serif;min-height:36px;padding:8px 13px;border:1px solid #dce4de;border-radius:7px;background:#fff;color:var(--ink,#25322e);cursor:pointer;transition:background .15s}.ds-secondary:hover:not(:disabled){background:#edf3ef}.ds-secondary:focus-visible{outline:3px solid #8fbcaa;outline-offset:3px}.ds-secondary:disabled{opacity:.48;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}",
+      "description": "Refresh, pagination and recovery.",
+      "refersTo": "button-secondary",
+      "kind": "button",
+      "name": "Secondary Button",
+      "html": "<button class=\"ds-secondary\">刷新榜单</button>"
+    },
+    {
+      "css": ".ds-search{display:flex;align-items:center;gap:8px;padding-left:10px;border:1px solid #dce3de;border-radius:7px;background:#fff}.ds-search svg{width:15px;height:15px;stroke:#748378;fill:none;stroke-width:1.7;stroke-linecap:round}.ds-search input{min-width:0;width:100%;padding:9px 7px 9px 0;border:0;background:transparent;font:12px \"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:var(--ink,#25322e);caret-color:var(--green,#18725b)}.ds-search input::placeholder{color:#5f7066}.ds-search input:focus-visible{outline:2px solid #7aaf99;outline-offset:-2px}",
+      "description": "Search the current repository list.",
+      "refersTo": "input-search",
+      "kind": "input",
+      "name": "Search Field",
+      "html": "<label class=\"ds-search\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 4 4\"/></svg><input type=\"search\" placeholder=\"搜索当前榜单的项目…\" aria-label=\"搜索当前榜单\"></label>"
+    },
+    {
+      "css": ".ds-nav{display:grid;gap:7px;padding:12px;background:#f0f3f0}.ds-nav-item{border:0;text-align:left;padding:12px 13px;border-radius:8px;background:transparent;color:#5c6c61;font:550 13px \"Segoe UI\",\"Microsoft YaHei\",sans-serif;cursor:pointer}.ds-nav-item:hover{background:#e6ede6}.ds-nav-item.ds-nav-active{background:#e0ebe2;color:#15563c}.ds-nav-item:focus-visible{outline:3px solid #8fbcaa;outline-offset:3px}",
+      "name": "Navigation",
+      "description": "Active and available sidebar destinations.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"主导航\"><button class=\"ds-nav-item ds-nav-active\">热门榜单</button><button class=\"ds-nav-item\">下载记录</button></nav>",
+      "kind": "nav"
+    },
+    {
+      "css": ".ds-job{display:inline-flex;font:10px \"Segoe UI\",\"Microsoft YaHei\",sans-serif;padding:2px 7px;white-space:nowrap;border-radius:4px;background:#e7f3eb;color:#28744d}",
+      "name": "Job Status",
+      "description": "Read-only completed download state.",
+      "html": "<span class=\"ds-job\">已完成</span>",
+      "kind": "chip"
+    },
+    {
+      "css": ".ds-repos{border:1px solid #dfe6e1;border-radius:9px;overflow:hidden;background:#fff;font:12px \"Segoe UI\",\"Microsoft YaHei\",sans-serif;color:var(--ink,#25322e)}.ds-row{display:grid;grid-template-columns:15px minmax(0,1fr) 60px 70px;align-items:start;gap:10px;padding:17px 10px;background:#f0f7f2}.ds-row:hover{background:#e9f3ed}.ds-row input{accent-color:var(--green,#18725b);width:15px;height:15px;margin:0}.ds-row a{font-size:13px;font-weight:600;color:#243e2d;text-decoration:none;overflow-wrap:anywhere}.ds-row a:hover{text-decoration:underline}.ds-row a:focus-visible{outline:3px solid #8fbcaa;outline-offset:3px}.ds-row input:focus-visible{outline:2px solid #7aaf99;outline-offset:1px}.ds-row p{margin:5px 0 0;color:#6b776f;font-size:12px;line-height:1.7}.ds-row>span{text-align:right;font-variant-numeric:tabular-nums}.ds-growth{font-weight:650;color:#207b54}",
+      "description": "Compact selected repository with comparable numeric counts.",
+      "refersTo": "repository-container",
+      "kind": "card",
+      "name": "Repository Container",
+      "html": "<div class=\"ds-repos\"><div class=\"ds-row\"><input type=\"checkbox\" checked aria-label=\"选择 owner/repository\"><div><a href=\"https://github.com/\">owner / repository</a><p>项目简介与编程语言信息</p></div><span class=\"ds-growth\">+128</span><span>12,400</span></div></div>"
+    }
+  ],
+  "narrative": {
+    "northStar": "Operate",
+    "overview": "Starport is a compact Chinese operational workspace. Its code-led visual direction supports scanning repository identities, comparing Star counts, selecting projects, and managing local downloads. The user-confirmed compact list and persistent download panel define the current surface.\n\nQuiet sage navigation, a near-white workspace, white working surfaces and restrained green actions keep the repository data prominent. Native system typography supports Chinese text without external font loading. This document records the implemented system in `public/style.css`, `public/index.html` and `public/app.js`; token values in the frontmatter are normative.",
+    "keyCharacteristics": [
+      "Compact repository rows with aligned, tabular numeric columns.",
+      "Green actions and selection feedback; amber data notices and explicit failure text.",
+      "Flat surfaces, fine borders and consistent line icons.",
+      "Persistent desktop download controls that follow the list on mobile."
+    ],
+    "rules": [],
+    "dos": [
+      "Do preserve aligned numeric columns and readable Chinese repository text at every breakpoint.",
+      "Do pair selection and status colors with checkboxes, labels or other explicit state cues.",
+      "Do retain visible keyboard focus and the implemented reduced-motion treatment.",
+      "Do show source, timestamp, candidate scope and stale-data notices alongside results."
+    ],
+    "donts": [
+      "Don't replace this compact working list with decorative metric cards.",
+      "Don't imply that Trending candidates form an exhaustive global growth ranking.",
+      "Don't require hover to reveal an essential action or state.",
+      "Don't merge Git clone and source ZIP labels; their distinct download behavior must remain visible."
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8fa">
+  <title>GitHub 热门项目 · Starport</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到榜单</a>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Starport 首页"><span class="brand-mark" data-icon="orbit"></span><span>Starport<span class="brand-caption">GitHub 开源发现站</span></span></a>
+    <nav aria-label="主导航">
+      <button class="nav-item active" id="nav-rankings" data-view="rankings"><span data-icon="chart"></span>热门榜单<span class="nav-indicator"></span></button>
+      <button class="nav-item" id="nav-downloads" data-view="downloads"><span data-icon="download"></span>下载记录<span class="count" id="history-count">0</span></button>
+    </nav>
+    <section class="side-guide" id="side-guide">
+      <h2>把灵感带到本地</h2>
+      <p>发现项目，勾选收藏，<br>一次下载到你的工作目录。</p>
+      <div class="guide-line"><span data-icon="check"></span>日 / 周 / 月新增 Star</div>
+      <div class="guide-line"><span data-icon="check"></span>累计 Star 总榜</div>
+      <div class="guide-line"><span data-icon="check"></span>多项目批量下载</div>
+    </section>
+    <div class="sidebar-bottom">
+      <details><summary><span data-icon="info"></span>数据与开源说明</summary><p>日周月榜取自 GitHub Trending 候选集，按新增 Star 排序。总榜来自 GitHub Search，最多浏览前 1,000 个公开非 Fork 仓库。</p><p>抓取逻辑改编自 <a href="https://github.com/huchenme/github-trending-api" target="_blank" rel="noreferrer">huchenme/github-trending-api</a>（MIT）。备用数据来自 <a href="https://github.com/isboyjc/github-trending-api" target="_blank" rel="noreferrer">isboyjc</a>。</p></details>
+      <div class="local-status"><span class="status-dot"></span><span id="runtime-label">本地运行</span><span id="connection-status">连接中</span></div>
+    </div>
+  </aside>
+  <div class="app-body">
+    <header class="topbar"><span class="breadcrumb">工作空间<span>/</span><strong id="breadcrumb-current">热门榜单</strong></span><span class="local-badge" id="workspace-badge"><span data-icon="monitor"></span>LOCAL WORKSPACE</span></header>
+    <div class="workspace">
+      <main id="main" tabindex="-1">
+        <section id="rankings-view">
+          <div class="page-heading"><div><h1>GitHub 热门项目<span class="live-dot" title="真实 GitHub 数据"></span></h1><p>追踪开源热度，找到你的下一个项目。</p></div><button id="refresh" class="button secondary"><span data-icon="refresh"></span>刷新榜单</button></div>
+          <div class="tabs" role="tablist" aria-label="榜单周期">
+            <button role="tab" id="tab-daily" aria-selected="true" aria-controls="ranking-panel" data-period="daily" class="tab active">日榜<span>Daily</span></button>
+            <button role="tab" id="tab-weekly" aria-selected="false" aria-controls="ranking-panel" data-period="weekly" class="tab" tabindex="-1">周榜<span>Weekly</span></button>
+            <button role="tab" id="tab-monthly" aria-selected="false" aria-controls="ranking-panel" data-period="monthly" class="tab" tabindex="-1">月榜<span>Monthly</span></button>
+            <button role="tab" id="tab-all" aria-selected="false" aria-controls="ranking-panel" data-period="all" class="tab" tabindex="-1">总榜<span>All time</span></button>
+          </div>
+          <div role="tabpanel" id="ranking-panel" aria-labelledby="tab-daily">
+            <div class="filters">
+              <label class="search-field"><span data-icon="search"></span><input id="search" type="search" placeholder="搜索当前榜单的项目…" aria-label="搜索当前榜单"></label>
+              <label><span class="sr-only">编程语言</span><select id="language"><option value="">全部语言</option><option>Python</option><option>TypeScript</option><option>JavaScript</option><option>Go</option><option>Rust</option><option>Java</option><option>C++</option><option>C</option><option>C#</option><option>HTML</option><option>Vue</option><option>Swift</option><option>Kotlin</option><option>PHP</option><option>Ruby</option><option>Shell</option></select></label>
+              <label><span class="sr-only">排名方式</span><select id="sort"><option value="growth">新增 Star 优先</option><option value="stars">累计 Star 优先</option><option value="forks">Fork 数优先</option></select></label>
+            </div>
+            <p id="language-availability" class="field-help" hidden>灰色语言的本期快照尚未发布，更新成功后会自动开放。</p>
+            <div class="list-toolbar"><label class="select-all"><input type="checkbox" id="select-all">全选当前页</label><span id="results-count">正在获取榜单…</span></div>
+            <div id="import-notice" class="notice" role="status" hidden></div>
+            <div id="notice" class="notice" role="status" hidden></div>
+            <div id="ranking-status" class="empty-state" role="status"><span class="loader"></span><h2>正在连接 GitHub</h2><p>直连不可用时会尝试公开快照，请稍候。</p></div>
+            <div class="table-wrap" id="table-wrap" hidden><table class="repo-table"><thead><tr><th class="check-col"><span class="sr-only">选择</span></th><th class="rank-col">排名</th><th>项目</th><th class="numeric" id="growth-heading">今日新增</th><th class="numeric">总 Star</th></tr></thead><tbody id="repo-list"></tbody></table></div>
+            <div class="pagination" id="pagination" hidden><button class="button secondary" id="previous">上一页</button><span id="page-number"></span><button class="button secondary" id="next">下一页</button></div>
+            <footer class="data-footer" id="data-footer" hidden><div><span data-icon="database"></span><a id="source-link" target="_blank" rel="noreferrer"></a><span id="cache-label"></span></div><span id="data-date"></span><p id="data-scope"></p></footer>
+          </div>
+        </section>
+        <section id="downloads-view" hidden>
+          <div class="page-heading"><div><h1>下载记录</h1><p>每个项目的进度、保存位置与下载结果。</p></div></div>
+          <div class="history-toolbar"><label>任务状态<select id="history-filter"><option value="all">全部任务</option><option value="active">进行中</option><option value="completed">已完成</option><option value="failed">失败 / 中断</option></select></label><span id="history-summary"></span></div>
+          <div id="history-list"></div>
+        </section>
+      </main>
+      <aside class="download-panel" aria-label="批量下载面板">
+        <div class="panel-title"><h2><span data-icon="folder"></span><span id="panel-title-text">带到本地</span></h2><span class="count" id="selected-count">0</span></div>
+        <div class="selection-toolbar"><span>已选项目</span><button class="text-button" id="clear-selection" disabled>清空</button></div>
+        <div id="selected-list" class="selected-list"><div class="selection-empty"><span data-icon="checkbox"></span><p>勾选左侧项目<br><span>在这里一起下载</span></p></div></div>
+        <label id="local-import" class="button secondary import-file" hidden>导入网站项目清单<input id="import-selection" type="file" accept=".json,application/json"></label>
+        <section id="portal-form" hidden>
+          <h3>直接使用，无需安装</h3>
+          <button id="prepare-downloads" class="button primary" disabled><span data-icon="download"></span>生成源码下载列表</button>
+          <div id="source-downloads" hidden></div>
+          <div class="portal-actions"><button id="copy-commands" class="button secondary" disabled>复制克隆命令</button><button id="export-selection" class="button secondary" disabled>下载项目清单</button></div>
+          <div class="helper-section"><h3>本地助手 · 可选安装</h3><p class="field-help">将勾选项目批量 Git 克隆到指定目录，查看进度、重试或保留完整提交历史。无需安装即可使用上面的功能。</p>
+          <a id="open-helper" class="button primary" hidden>交给本地助手</a>
+          <details><summary>首次使用？下载安装助手</summary><p class="field-help">Windows 64 位：下载并解压完整文件夹，双击 install-helper.cmd 注册助手。保持文件夹位置不变。安装不需要管理员权限。</p><a class="button secondary" href="./downloads/starport-helper-windows.zip" download>下载 Windows 助手</a><p class="field-help">安装时从 Node.js 官网下载运行环境并校验。Git 克隆需要电脑已安装 Git；没有 Git 也可用助手下载 ZIP。卸载链接关联请运行 uninstall-helper.cmd。</p><p class="field-help">若浏览器无法唤醒助手，下载项目清单，再在助手页面选择“导入网站项目清单”。</p></details></div>
+        </section>
+        <form id="download-form">
+          <label class="field-label" for="directory">保存到本地目录</label>
+          <div class="path-field"><input id="directory" required autocomplete="off" spellcheck="false" placeholder="F:\Projects" aria-describedby="path-help"><button type="button" id="browse" title="浏览本地目录" aria-label="浏览本地目录"><span data-icon="folder-open"></span></button></div>
+          <p class="field-help" id="path-help">按「作者 / 仓库」分目录，已有项目自动跳过。</p>
+          <label class="field-label" for="method">下载方式</label>
+          <select id="method"><option value="git">Git 克隆 · 可继续开发</option><option value="zip">源码 ZIP · 不含 Git 历史</option></select>
+          <label class="checkbox-label"><input id="shallow" type="checkbox" checked>仅克隆最新版本 <span class="small-tag">更快</span></label>
+          <p class="field-help" id="method-help">保留 .git 目录；取消勾选可下载完整提交历史。</p>
+          <button id="download-button" class="button primary" type="submit" disabled><span data-icon="download"></span><span id="download-label">请选择项目</span></button>
+          <p class="download-note"><span data-icon="shield"></span>只下载源码，不运行项目代码</p>
+        </form>
+        <form id="bundle-form" hidden>
+          <label class="field-label">云端打包下载</label>
+          <p class="field-help">选中的项目由云端抓取源码并合并成一个 ZIP，直接保存到你的电脑。按「作者 / 仓库」分层，不含 Git 历史，也不写入服务器磁盘。</p>
+          <button id="bundle-button" class="button primary" type="submit" disabled><span data-icon="download"></span><span id="bundle-label">请选择项目</span></button>
+          <p class="download-note"><span data-icon="shield"></span>只抓取公开源码，不在云端运行项目代码</p>
+        </form>
+        <div id="bundle-status" class="bundle-status" hidden></div>
+        <div class="queue-section" id="queue-section"><div class="queue-heading"><h3>下载动态</h3><button class="text-button" id="view-history">全部记录<span data-icon="arrow-right"></span></button></div><div id="queue-preview" aria-live="polite"><p class="queue-empty">还没有下载任务</p></div></div>
+        <details class="token-help" id="token-help"><summary><span data-icon="key"></span>GitHub 请求额度<span id="token-status"></span></summary><p>累计总榜使用官方 API。遇到限流时，可在项目根目录的 .env 文件配置 GITHUB_TOKEN，再重启服务。密钥不会发送到浏览器。</p></details>
+      </aside>
+    </div>
+  </div>
+  <div id="toast" role="status" class="toast" hidden></div>
+</body>
+</html>

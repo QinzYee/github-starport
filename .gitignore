@@ -1,0 +1,12 @@
+node_modules/
+.data/
+.env
+downloads/
+test-results/
+.playwright-mcp/
+.impeccable/config.local.json
+dist/
+.wrangler/
+runtime/
+.workbuddy/
+*.genie

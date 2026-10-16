@@ -1,0 +1,28 @@
+language: node_js
+cache:
+  yarn: true
+  directories:
+    - ~/.npm
+notifications:
+  email: false
+node_js:
+  - '12'
+install:
+  - yarn global add codecov
+  - yarn install
+
+jobs:
+  include:
+    - stage: test
+      script:
+        - yarn validate
+        - codecov
+    - stage: release
+      if: branch = master
+      script:
+        - yarn build
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script:
+          - npx semantic-release

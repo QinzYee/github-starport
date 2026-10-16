@@ -1,0 +1,49 @@
+name: Publish public portal
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+concurrency:
+  group: starport-publication
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run check && npm test
+      - name: Restore previous snapshots
+        uses: actions/cache@v4
+        with:
+          path: .data
+          key: starport-data-${{ github.run_id }}
+          restore-keys: starport-data-
+      - name: Update real rankings
+        run: npm run data:update
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: npm run build:helper && npm run build:portal
+      - name: Upload reviewable publication
+        if: github.event_name != 'schedule'
+        uses: actions/upload-artifact@v4
+        with:
+          name: starport-publication
+          path: dist
+          retention-days: 3
+      - name: Deploy Cloudflare static assets
+        if: ${{ vars.CLOUDFLARE_ACCOUNT_ID != '' }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

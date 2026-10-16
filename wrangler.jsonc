@@ -1,0 +1,7 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "starport-github",
+  "compatibility_date": "2026-10-15",
+  "workers_dev": true,
+  "assets": { "directory": "./dist", "not_found_handling": "404-page" }
+}

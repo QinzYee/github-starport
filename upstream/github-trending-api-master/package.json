@@ -1,0 +1,95 @@
+{
+  "name": "@huchenme/github-trending",
+  "version": "0.0.0-development",
+  "description": "Get GitHub trending data",
+  "sideEffects": false,
+  "main": "dist/github-trending.cjs.js",
+  "module": "dist/github-trending.esm.js",
+  "engines": {
+    "node": "12.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/huchenme/github-trending-api.git"
+  },
+  "keywords": [
+    "github",
+    "trending",
+    "api",
+    "node"
+  ],
+  "author": "Hu Chen <chen@huchen.dev>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/huchenme/github-trending-api/issues",
+    "email": "chen@huchen.dev"
+  },
+  "homepage": "https://github.com/huchenme/github-trending-api#readme",
+  "dependencies": {
+    "@babel/runtime-corejs3": "^7.9.2",
+    "axios": "^0.19.2",
+    "cheerio": "^1.0.0-rc.3",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-cache-controller": "^1.1.0",
+    "lodash": "^4.17.15",
+    "memory-cache": "^0.2.0",
+    "opencollective-postinstall": "^2.0.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.9.0",
+    "@babel/node": "^7.8.7",
+    "@babel/plugin-transform-runtime": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "babel-jest": "^25.3.0",
+    "babel-plugin-lodash": "^3.3.4",
+    "doctoc": "^1.4.0",
+    "eslint": "^6.8.0",
+    "eslint-config-kentcdodds": "14.8.1",
+    "husky": "^4.2.5",
+    "jest": "^25.3.0",
+    "lint-staged": "^10.1.6",
+    "netlify-cli": "^2.58.0",
+    "node-fetch": "^2.6.0",
+    "nodemon": "^2.0.3",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.0.4",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.6.1",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.3.0",
+    "semantic-release": "^17.0.6"
+  },
+  "scripts": {
+    "start": "netlify dev",
+    "test": "jest --coverage",
+    "eslint": "eslint .",
+    "validate": "npm-run-all build eslint test",
+    "prebuild": "rimraf dist",
+    "build": "NODE_ENV=production rollup -c",
+    "semantic-release": "semantic-release",
+    "postinstall": "opencollective-postinstall || true"
+  },
+  "lint-staged": {
+    "README.md": [
+      "doctoc",
+      "prettier --write"
+    ],
+    "**/!(README).+(md|js|json)": "prettier --write",
+    "*.js": "eslint --fix"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn validate && lint-staged"
+    }
+  },
+  "prettier": {
+    "singleQuote": true
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/github-trending-api"
+  }
+}

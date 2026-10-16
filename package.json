@@ -1,0 +1,33 @@
+{
+  "name": "github-hot-projects",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GitHub 日周月热门榜、累计 Star 总榜，本机批量克隆与云端打包下载",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "start:cloud": "node server/cloud.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test",
+    "smoke": "node scripts/smoke.mjs",
+    "smoke:cloud": "node scripts/smoke-cloud.mjs",
+    "check": "node --check server/index.js && node --check server/cloud.js && node --check server/github.js && node --check server/downloads.js && node --check server/archive.js && node --check server/request.js && node --check public/app.js && node --check public/portal.js && node --check public/selection.js && node --check scripts/open-link.mjs && node --check scripts/update-data.mjs && node --check scripts/build-helper.mjs && node --check scripts/build-portal.mjs",
+    "data:update": "node scripts/update-data.mjs",
+    "build:helper": "node scripts/build-helper.mjs",
+    "build:portal": "node scripts/build-portal.mjs",
+    "preview:portal": "node scripts/preview-portal.mjs",
+    "deploy:portal": "wrangler deploy"
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.1",
+    "cheerio": "^1.1.2",
+    "express": "^5.1.0",
+    "undici": "^7.30.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.151.0"
+  }
+}
