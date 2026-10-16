@@ -2,6 +2,8 @@
 
 公网版是纯静态文件，不需要常驻 Node 服务或购买服务器。网站通过同源 JSON 提供真实榜单，用户可不安装助手，直接获取源码 ZIP 链接、复制 Git 命令或下载项目清单。
 
+当前实例：https://starport-github.github-hot-projects.workers.dev/ 。2026-10-16 已完成 GitHub Actions 到 Cloudflare 的实际发布验收；维护者电脑关机不影响网站访问和云端更新。定时工作流每小时触发，平台可能延迟调度。只有运行本地助手下载项目时，使用者自己的电脑需要开机。
+
 ## 第一次发布
 
 1. 准备一个 GitHub 仓库。若使用公开仓库，标准 GitHub Actions 运行器可以免费使用；发布应用与公开源码是两件事，创建公开仓库前应确认你愿意公开代码。不要上传 `.env`、`.data`、`.workbuddy`、`*.genie`、`node_modules`、`dist` 或个人下载项目。

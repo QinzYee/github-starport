@@ -2,6 +2,8 @@
 
 中文 GitHub 榜单与批量下载工具。推荐以纯静态公网网站提供榜单和源码下载，本地助手按需安装以解锁完整 Git 克隆。免费发布步骤见 [DEPLOYMENT.md](DEPLOYMENT.md)。原有本机模式和云端打包入口继续保留。
 
+在线使用：[Starport](https://starport-github.github-hot-projects.workers.dev/)。网站托管在 Cloudflare；访问网站不需要项目维护者的电脑开机。安装本地助手后，克隆任务在使用者自己的电脑上运行。
+
 ## 启动
 
 需要 Node.js 22.19+；Git 克隆方式还需要 Git。Windows 双击 **start.cmd**，或在项目目录运行：
