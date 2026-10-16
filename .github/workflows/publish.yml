@@ -32,7 +32,7 @@ jobs:
         run: npm run data:update
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - run: npm run build:helper && npm run build:portal
+      - run: npm run build:portal
       - name: Upload reviewable publication
         if: github.event_name != 'schedule'
         uses: actions/upload-artifact@v4

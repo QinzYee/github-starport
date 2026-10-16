@@ -1,5 +1,6 @@
-import { selectionDocument, validateSelection, helperLink, decodeSelection } from './selection.js';
+import { validateSelection, decodeSelection, validRepository } from './selection.js';
 import { getStaticRanking, availableLanguages } from './portal.js';
+import { cloneCommands, sourceZipUrl } from './commands.js';
 const paths = {
   orbit: '<path d="m12 3 2.8 5.6 6.2.9-4.5 4.4 1.1 6.1-5.6-2.9-5.6 2.9 1.1-6.1L3 9.5l6.2-.9Z"/><path d="M3 3h3M4.5 1.5v3M20 19h3M21.5 17.5v3"/>',
   chart: '<path d="M4 3v17h17M8 14l4-5 4 3 5-7"/>',
@@ -18,6 +19,7 @@ const paths = {
   database: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0"/>',
   external: '<path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7"/>',
   fork: '<circle cx="6" cy="4" r="2"/><circle cx="18" cy="4" r="2"/><circle cx="12" cy="20" r="2"/><path d="M6 6v3c0 4 12 4 12 0V6m-6 7v5"/>',
+  terminal: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3m6 0h4"/>',
   close: '<path d="m6 6 12 12M6 18 18 6"/>',
   inbox: '<path d="m3 13 3-9h12l3 9v7H3Zm0 0h5l2 3h4l2-3h5"/>',
   cloud: '<path d="M7 18a4 4 0 0 1 .6-7.9A5.5 5.5 0 0 1 18 11.6 3.5 3.5 0 0 1 17.5 18Z"/>'
@@ -29,6 +31,8 @@ const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&a
 const format = value => new Intl.NumberFormat('en-US').format(value || 0);
 const date = value => value ? new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) : '未知';
 const periodLabel = { daily: '今日', weekly: '本周', monthly: '本月', all: '累计' };
+const periodLimit = { daily: 10, weekly: 20, monthly: 50, all: 50 };
+const pageSize = 10;
 const stateNames = { queued: '等待中', running: '下载中', completed: '已完成', failed: '失败', skipped: '已跳过', cancelled: '已取消', interrupted: '已中断' };
 const state = { period: 'daily', page: 1, data: null, selected: new Map(), config: null, jobs: [], view: 'rankings', loading: false, requestId: 0, submitting: false, pollFailed: false };
 const cloudMode = () => Boolean(state.config?.publicMode);
@@ -45,7 +49,7 @@ function toast(message, error = false) {
 async function api(url, options = {}) {
   if (portalMode()) {
     if (url.startsWith('/api/rankings?')) return getStaticRanking(new URL(url, location.origin).searchParams);
-    throw new Error('此功能需要本地助手，请在右侧下载或打开助手。');
+    throw new Error('此功能仅在本机运行模式下提供。');
   }
   const headers = { ...options.headers };
   if (options.body) headers['Content-Type'] = 'application/json';
@@ -64,7 +68,6 @@ function setView(view) {
   $('rankings-view').hidden = view !== 'rankings';
   $('downloads-view').hidden = view !== 'downloads';
   document.querySelectorAll('[data-view]').forEach(el => el.classList.toggle('active', el.dataset.view === view));
-  $('breadcrumb-current').textContent = view === 'rankings' ? '热门榜单' : '下载记录';
   if (view === 'downloads') renderHistory();
 }
 document.querySelectorAll('[data-view]').forEach(el => el.addEventListener('click', () => setView(el.dataset.view)));
@@ -85,7 +88,7 @@ async function loadRanking(refresh = false) {
   $('results-count').textContent = '正在获取榜单…';
   $('ranking-status').hidden = false;
   $('ranking-status').innerHTML = `<span class="loader"></span><h2>${portalMode() ? '正在读取榜单' : '正在连接 GitHub'}</h2><p>${portalMode() ? '加载最近发布的榜单快照，请稍候。' : '直连不可用时会尝试公开快照，请稍候。'}</p>`;
-  const params = new URLSearchParams({ period: state.period, language: $('language').value, page: String(state.page) });
+  const params = new URLSearchParams({ period: state.period, language: $('language').value, page: '1' });
   if (refresh) params.set('refresh', '1');
   try {
     if (portalMode()) {
@@ -115,17 +118,21 @@ async function loadRanking(refresh = false) {
     if (requestId === state.requestId) $('refresh').disabled = false;
   }
 }
-function filteredRepositories() {
+function matchingRepositories() {
   const query = $('search').value.toLowerCase().trim();
   const sort = $('sort').value;
-  const repos = [...(state.data?.repositories || [])].sort((a, b) => (sort === 'growth' ? b.periodStars - a.periodStars : sort === 'forks' ? b.forks - a.forks : b.stars - a.stars) || b.stars - a.stars);
-  return repos.map((repo, index) => ({ ...repo, rank: (state.period === 'all' ? (state.page - 1) * 100 : 0) + index + 1 })).filter(repo => `${repo.fullName} ${repo.description} ${repo.language || ''}`.toLowerCase().includes(query));
+  const repos = [...(state.data?.repositories || [])].slice(0, periodLimit[state.period]).sort((a, b) => (sort === 'growth' ? b.periodStars - a.periodStars : sort === 'forks' ? b.forks - a.forks : b.stars - a.stars) || b.stars - a.stars);
+  return repos.map((repo, index) => ({ ...repo, rank: index + 1 })).filter(repo => `${repo.fullName} ${repo.description} ${repo.language || ''}`.toLowerCase().includes(query));
 }
+function filteredRepositories() { return matchingRepositories().slice((state.page - 1) * pageSize, state.page * pageSize); }
 function renderRanking() {
   if (!state.data || state.loading) return;
+  const matches = matchingRepositories();
+  const pages = Math.max(1, Math.ceil(matches.length / pageSize));
+  state.page = Math.min(state.page, pages);
   const repos = filteredRepositories();
   $('growth-heading').textContent = state.period === 'all' ? '周期新增' : `${periodLabel[state.period]}新增`;
-  $('results-count').textContent = `${repos.length} 个项目${state.period === 'all' ? ` · 第 ${state.page} 页` : ' · Trending 候选集'}`;
+  $('results-count').textContent = matches.length ? `${(state.page - 1) * pageSize + 1}–${(state.page - 1) * pageSize + repos.length} / ${matches.length} 个项目` : '0 个项目';
   $('table-wrap').hidden = !repos.length;
   $('ranking-status').hidden = Boolean(repos.length);
   if (!repos.length) $('ranking-status').innerHTML = `${icon('search')}<h2>没有找到匹配项目</h2><p>试试其他关键词或编程语言。</p>`;
@@ -140,10 +147,10 @@ function renderRanking() {
   }).join('');
   $('select-all').disabled = !repos.length;
   updateChecks();
-  $('pagination').hidden = state.period !== 'all';
+  $('pagination').hidden = !matches.length;
   $('previous').disabled = state.page <= 1;
-  $('next').disabled = state.page >= Math.ceil(state.data.total / 100) || state.data.repositories.length < 100;
-  $('page-number').textContent = `${state.page} / ${Math.max(1, Math.ceil(state.data.total / 100))}`;
+  $('next').disabled = state.page >= pages;
+  $('page-number').textContent = `第 ${state.page} / ${pages} 页`;
 }
 function renderMetadata() {
   const data = state.data;
@@ -155,7 +162,7 @@ function renderMetadata() {
   $('cache-label').textContent = data.snapshot ? '· 定时快照' : data.cached ? '· 本地缓存' : '· 刚刚获取';
   $('data-date').textContent = `数据时间 ${date(data.dataAt)} CST`;
   $('data-date').title = `获取时间：${date(data.fetchedAt)}`;
-  $('data-scope').textContent = data.scope;
+  $('data-scope').textContent = `本榜最多展示 ${periodLimit[state.period]} 个项目，每页 ${pageSize} 条。${state.period === 'all' ? '公开非 Fork 仓库，按累计 Star 取前 50 个。' : '数据来自 GitHub Trending 候选集，不代表全站完整新增 Star 排名；候选不足时展示实际条数。'}${portalMode() ? ' 榜单定时更新，“刷新”读取最近发布的数据。' : ''}`;
 }
 function updateChecks() {
   const repos = filteredRepositories();
@@ -172,23 +179,18 @@ function renderSelection() {
   const count = state.selected.size;
   const blocked = !count || !state.config || state.submitting;
   $('selected-count').textContent = count;
+  $('mobile-selection').hidden = !portalMode() || !count;
+  $('mobile-selected-count').textContent = `已选 ${count} 个项目`;
   $('clear-selection').disabled = !count;
   $('download-button').disabled = blocked;
   $('bundle-button').disabled = blocked;
-  $('prepare-downloads').disabled = blocked;
+  $('download-zips').disabled = blocked || zipStarting;
   $('copy-commands').disabled = blocked;
-  $('export-selection').disabled = blocked;
-  $('open-helper').hidden = !portalMode() || !count;
-  if (portalMode() && count) {
-    try { $('open-helper').href = helperLink(selectionDocument([...state.selected.keys()])); }
-    catch { $('open-helper').hidden = true; }
-  }
   $('download-label').textContent = state.submitting ? '加入队列中…' : count ? `下载 ${count} 个项目` : '请选择项目';
   $('bundle-label').textContent = state.submitting ? '正在云端打包…' : count ? `打包下载 ${count} 个项目` : '请选择项目';
-  const empty = portalMode() ? '勾选左侧项目<br><span>下载源码，或交给本地助手</span>' : cloudMode() ? '勾选左侧项目<br><span>在这里一起打包下载</span>' : '勾选左侧项目<br><span>在这里一起下载</span>';
-  $('selected-list').innerHTML = count ? [...state.selected.values()].map(repo => `<div class="selected-item">${icon('check')}<span>${escape(repo.fullName)}</span><button class="remove-button" data-remove="${escape(repo.fullName)}" aria-label="移除 ${escape(repo.fullName)}">${icon('close')}</button></div>`).join('') : `<div class="selection-empty"><span>${icon('checkbox')}</span><p>${empty}</p></div>`;
+  const empty = portalMode() ? '勾选榜单中的项目<br><span>下载 ZIP，或复制克隆命令</span>' : cloudMode() ? '勾选左侧项目<br><span>在这里一起打包下载</span>' : '勾选左侧项目<br><span>在这里一起下载</span>';
+  $('selected-list').innerHTML = count ? [...state.selected.values()].map(repo => `<div class="selected-item"><span class="selected-name">${escape(repo.fullName)}</span>${portalMode() ? `<a class="icon-button" href="${sourceZipUrl(repo.fullName)}" target="_blank" rel="noreferrer" aria-label="下载 ${escape(repo.fullName)} 的 ZIP" title="下载 ZIP">${icon('download')}</a><button class="icon-button" data-copy="${escape(repo.fullName)}" aria-label="复制 ${escape(repo.fullName)} 的克隆命令" title="复制克隆命令">${icon('terminal')}</button>` : ''}<button class="remove-button" data-remove="${escape(repo.fullName)}" aria-label="移除 ${escape(repo.fullName)}">${icon('close')}</button></div>`).join('') : `<div class="selection-empty"><span>${icon('checkbox')}</span><p>${empty}</p></div>`;
   updateChecks();
-  if (portalMode()) { $('source-downloads').replaceChildren(); $('source-downloads').hidden = true; }
 }
 
 function saveFile(content, filename, type = 'application/json') {
@@ -196,17 +198,33 @@ function saveFile(content, filename, type = 'application/json') {
   const link = document.createElement('a'); link.href = url; link.download = filename; link.click();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
-$('prepare-downloads').addEventListener('click', () => {
-  $('source-downloads').innerHTML = '<p class="field-help">逐项点击，由 GitHub 直接下载到浏览器；不含 Git 历史。下载完成情况请查看浏览器。</p>' + [...state.selected.keys()].map(repo => `<a class="source-download" href="https://github.com/${escape(repo)}/archive/HEAD.zip" target="_blank" rel="noreferrer">${icon('download')}<span>${escape(repo)}</span>${icon('external')}</a>`).join('');
-  $('source-downloads').hidden = false;
+const commandShell = /Win/i.test(navigator.platform) ? 'powershell' : 'posix';
+async function copyCommands(repositories) {
+  try {
+    const commands = cloneCommands(repositories, $('clone-directory').value, commandShell);
+    try { await navigator.clipboard.writeText(commands); toast(`已复制 ${repositories.length} 条克隆命令，请在${commandShell === 'powershell' ? ' PowerShell ' : '终端'}中运行。`); }
+    catch { saveFile(commands + '\n', 'starport-commands.txt', 'text/plain'); toast('浏览器未允许复制，已保存命令文本文件。'); }
+  } catch (error) { toast(error.message, true); }
+}
+$('copy-commands').addEventListener('click', () => copyCommands([...state.selected.keys()]));
+$('clone-directory').addEventListener('input', () => { try { localStorage.setItem('starport-clone-directory', $('clone-directory').value); } catch { /* optional preference */ } });
+let zipStarting = false;
+$('download-zips').addEventListener('click', async () => {
+  const repositories = [...state.selected.keys()];
+  if (!repositories.length || zipStarting) return;
+  zipStarting = true; renderSelection();
+  $('download-feedback').hidden = false;
+  try {
+    for (let i = 0; i < repositories.length; i++) {
+      const frame = document.createElement('iframe'); frame.hidden = true; frame.title = `下载 ${repositories[i]}`;
+      frame.src = sourceZipUrl(repositories[i]); document.body.append(frame);
+      setTimeout(() => frame.remove(), 120000);
+      $('download-feedback').textContent = `已发起 ${i + 1} / ${repositories.length} 个下载请求。若浏览器询问，请允许多文件下载。`;
+      if (i + 1 < repositories.length) await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    $('download-feedback').textContent = `已发起 ${repositories.length} 个 ZIP 下载请求，请在浏览器查看结果。若被拦截，可使用项目旁的下载按钮。`;
+  } finally { zipStarting = false; renderSelection(); }
 });
-$('copy-commands').addEventListener('click', async () => {
-  const commands = [...state.selected.keys()].map(repo => `git clone --depth 1 -- https://github.com/${repo}.git "${repo}"`).join('\n');
-  try { await navigator.clipboard.writeText(commands); toast('克隆命令已复制。请在你的目标目录中运行。'); }
-  catch { saveFile(commands + '\n', 'starport-commands.txt', 'text/plain'); toast('浏览器未允许复制，已保存命令文本文件。'); }
-});
-$('export-selection').addEventListener('click', () => saveFile(JSON.stringify(selectionDocument([...state.selected.keys()]), null, 2), 'projects.starport.json'));
-$('open-helper').addEventListener('click', () => toast('请在浏览器提示中允许打开助手。未安装时可先下载助手，或导入清单文件。'));
 function importRepositories(document) {
   const selection = validateSelection(document);
   for (const fullName of selection.repositories) { if (state.selected.size < 100) state.selected.set(fullName, { fullName }); }
@@ -250,12 +268,14 @@ $('select-all').addEventListener('change', event => {
   renderSelection();
 });
 $('selected-list').addEventListener('click', event => {
+  const copy = event.target.closest('[data-copy]');
+  if (copy) { copyCommands([copy.dataset.copy]); return; }
   const button = event.target.closest('[data-remove]');
   if (button) { state.selected.delete(button.dataset.remove); renderSelection(); }
 });
 $('clear-selection').addEventListener('click', () => { state.selected.clear(); renderSelection(); });
-$('search').addEventListener('input', renderRanking);
-$('sort').addEventListener('change', renderRanking);
+$('search').addEventListener('input', () => { state.page = 1; renderRanking(); });
+$('sort').addEventListener('change', () => { state.page = 1; renderRanking(); });
 $('language').addEventListener('change', () => { state.page = 1; loadRanking(); });
 $('refresh').addEventListener('click', () => loadRanking(true));
 function switchPeriod(period) {
@@ -287,8 +307,8 @@ document.querySelectorAll('[data-period]').forEach(button => {
     event.preventDefault(); buttons[index].focus(); switchPeriod(buttons[index].dataset.period);
   });
 });
-$('previous').addEventListener('click', () => { state.page--; loadRanking(); $('main').scrollIntoView({ block: 'start' }); });
-$('next').addEventListener('click', () => { state.page++; loadRanking(); $('main').scrollIntoView({ block: 'start' }); });
+$('previous').addEventListener('click', () => { if (state.page > 1) { state.page--; renderRanking(); } });
+$('next').addEventListener('click', () => { if (state.page * pageSize < matchingRepositories().length) { state.page++; renderRanking(); } });
 function methodChanged() {
   const zip = $('method').value === 'zip';
   $('shallow').disabled = zip;
@@ -393,10 +413,6 @@ function applyMode() {
     $('nav-downloads').hidden = true;
     $('queue-section').hidden = true;
     $('token-help').hidden = true;
-    $('workspace-badge').innerHTML = `${icon('cloud')}PUBLIC WORKSPACE`;
-    $('runtime-label').textContent = '公开网站';
-    $('panel-title-text').textContent = '带走项目';
-    $('side-guide').innerHTML = '<h2>随时发现，按需下载</h2><p>无需安装即可浏览和下载源码。<br>本地助手解锁完整克隆。</p><div class="guide-line">定时更新真实榜单</div><div class="guide-line">源码 ZIP / 项目清单</div><div class="guide-line">本地助手可选安装</div>';
     $('refresh').title = '读取最新已发布快照，榜单通常每小时更新';
     return;
   }
@@ -404,9 +420,6 @@ function applyMode() {
   $('nav-downloads').hidden = true;
   $('queue-section').hidden = true;
   $('token-help').hidden = true;
-  $('workspace-badge').innerHTML = `${icon('cloud')}PUBLIC DEMO`;
-  $('runtime-label').textContent = '云端运行';
-  $('panel-title-text').textContent = '取回源码';
   $('side-guide').innerHTML = '<h2>带走源码</h2><p>发现项目，勾选收藏，<br>云端打包成一个 ZIP 下载。</p>'
     + '<div class="guide-line"><span data-icon="check"></span>日 / 周 / 月新增 Star</div>'
     + '<div class="guide-line"><span data-icon="check"></span>累计 Star 总榜</div>'
@@ -434,12 +447,10 @@ async function pollJobs() {
     const result = await api('/api/downloads');
     state.jobs = result.jobs;
     state.pollFailed = false;
-    $('connection-status').textContent = '已连接';
     const snapshot = JSON.stringify(result.jobs);
     if (snapshot !== jobSnapshot) { jobSnapshot = snapshot; renderQueue(); if (state.view === 'downloads') renderHistory(); }
   } catch {
     state.pollFailed = true;
-    $('connection-status').textContent = '连接已断开';
   }
 }
 $('history-filter').addEventListener('change', renderHistory);
@@ -460,7 +471,8 @@ $('history-list').addEventListener('click', async event => {
 async function initialize() {
   try {
     const chosen = JSON.parse(localStorage.getItem('starport-selection') || '[]');
-    for (const repo of chosen.slice(0, 100)) if (repo && /^[\w.-]+\/[\w.-]+$/.test(repo.fullName)) state.selected.set(repo.fullName, { fullName: repo.fullName });
+    for (const repo of chosen.slice(0, 100)) if (repo && validRepository(repo.fullName)) state.selected.set(repo.fullName, { fullName: repo.fullName });
+    $('clone-directory').value = localStorage.getItem('starport-clone-directory') || '';
   } catch { /* ignore invalid saved state */ }
   renderSelection();
   try {
@@ -469,7 +481,6 @@ async function initialize() {
     $('token-status').textContent = state.config.tokenConfigured ? '已配置 Token' : '匿名访问';
     if (cloudMode()) {
       applyMode();
-      $('connection-status').textContent = '已连接';
       renderSelection();
       loadRanking();
       return;
@@ -486,7 +497,6 @@ async function initialize() {
     pollJobs();
     loadRanking();
   } catch (error) {
-    $('connection-status').textContent = '连接失败';
     $('ranking-status').innerHTML = `${icon('inbox')}<h2>服务未连接</h2><p>${cloudMode() ? '云端服务暂时不可用，请稍后刷新。' : '请运行启动脚本，然后刷新页面。'}${escape(error.message)}</p>`;
   }
   // Poll only after the previous request finishes; keep user selection untouched.

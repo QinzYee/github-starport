@@ -3,13 +3,13 @@
 <!-- impeccable:product-schema 1 -->
 
 ## Platform
-Chinese web UI with a public static portal and optional Windows local helper. The public site works without installation; the helper enables Git cloning into a user-selected local directory. Existing Node local mode and legacy cloud ZIP mode remain available.
+web
 
 ## Stack
-Node.js local service and browser UI, delegated to the implementer and confirmed by the user. Public distribution uses static assets on Cloudflare; GitHub Actions generates timestamped JSON snapshots. No database or always-on public server is required. Optional Windows helper carries production dependencies and installs its own verified Node.js runtime.
+Node.js local service and browser UI, delegated to the implementer and confirmed by the user. Public distribution uses static assets on Cloudflare; GitHub Actions generates timestamped JSON snapshots. No database or always-on public server is required. The public website has no helper, protocol registration or local network detection.
 
 ## Purpose
-Find interesting GitHub repositories using daily, weekly and monthly Star growth, plus an all-time Star leaderboard. Without installation, users browse/filter/select, open original source ZIP downloads, copy Git commands and export a repository list. Installing the helper unlocks Git cloning, history, directory choice, progress and retries. The helper import only carries repository names and never begins a download automatically.
+Find GitHub repositories by daily, weekly and monthly Star growth, plus cumulative Stars. Public users select repositories, download original source ZIPs and copy full-history Git clone commands. An optional directory is used only to generate commands; ZIPs use browser download settings. Each page has 10 rows; daily is capped at 10, weekly 20, monthly and all-time 50. Trending shows fewer repositories when the source has fewer candidates.
 
 ## Confirmed behavior
 - Daily, weekly and monthly lists use period Star growth; all-time uses cumulative Stars.

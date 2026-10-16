@@ -1,8 +1,8 @@
 # Starport · GitHub 热门项目
 
-中文 GitHub 榜单与批量下载工具。推荐以纯静态公网网站提供榜单和源码下载，本地助手按需安装以解锁完整 Git 克隆。免费发布步骤见 [DEPLOYMENT.md](DEPLOYMENT.md)。原有本机模式和云端打包入口继续保留。
+中文 GitHub 榜单与源码下载工具。公网版只提供源码 ZIP 和 Git 克隆命令，无需安装助手。免费发布步骤见 [DEPLOYMENT.md](DEPLOYMENT.md)。历史本机与云端打包模式保留在源码中。
 
-在线使用：[Starport](https://starport-github.github-hot-projects.workers.dev/)。网站托管在 Cloudflare；访问网站不需要项目维护者的电脑开机。安装本地助手后，克隆任务在使用者自己的电脑上运行。
+在线使用：[Starport](https://starport-github.github-hot-projects.workers.dev/)。网站托管在 Cloudflare；访问网站不需要项目维护者的电脑开机。复制克隆命令后，在自己的终端运行即可保留完整 Git 历史。
 
 ## 启动
 
@@ -15,16 +15,15 @@ npm start
 
 打开 http://127.0.0.1:4317 。此命令只启动本机服务；公网静态版使用下述发布流程。
 
-## 推荐：公网静态版与可选助手
+## 推荐：公网静态版
 
 ```powershell
 npm run data:update
-npm run build:helper
 npm run build:portal
 npm run preview:portal
 ```
 
-公网版无需安装即可浏览榜单、获取各仓库的原始源码 ZIP、复制克隆命令和导出项目清单。助手安装后可用 `starport://` 链接唤醒；也支持在本地页面导入清单。助手仅接收仓库名，确认目录并点击下载之前不会执行克隆。
+公网版统一每页 10 条，日榜最多 10 条、周榜 20 条、月榜与总榜各 50 条。Trending 不足目标数量时显示实际条数。页码在列表顶部，勾选后自动生成右侧下载列表；每项支持 ZIP 与命令复制，也支持批量操作。可选目录仅写入生成的命令，ZIP 使用浏览器下载位置；浏览器可能要求允许多文件下载。
 
 `dist` 是上传到 Cloudflare 的静态文件，不包含本地服务、密钥和个人数据。GitHub Actions 定时更新榜单并发布；尚未完成账号授权时不会生成虚假的公网地址。详细账号配置、安装方式和额度边界见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 

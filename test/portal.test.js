@@ -64,20 +64,19 @@ test('发布生成器保留失败项旧快照，基础数据缺失时阻止首�
   assert.equal(await readFile(path.join(directory, first.datasets['daily||1'].file), 'utf8'), before);
   await assert.rejects(refreshPortal({ directory: path.join(directory, 'empty'), rankings, selectedLanguages: [''], pause: 0, log: () => {} }), /基础榜单/);
 });
-test('静态发布仅复制网页、榜单和助手，不包含服务端、.env 或本地设置', async t => {
+test('静态发布仅复制网页和榜单，不需要助手包或包含本地设置', async t => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'starport-static-'));
   t.after(() => rm(directory, { recursive: true, force: true }));
   const snapshots = path.join(directory, 'snapshots');
   const rankings = { get: async ({ period, language, page }) => ({ repositories: [{ fullName: 'a/b' }], period, language, page, dataAt: '2026-10-15T00:00:00Z', total: 1 }) };
   await refreshPortal({ directory: snapshots, rankings, selectedLanguages: [''], totalPages: 1, pause: 0, log: () => {} });
-  const helper = path.join(directory, 'helper.zip');
-  await writeFile(helper, 'fixture'); await writeFile(`${helper}.sha256`, 'fixture-checksum');
   const output = path.join(directory, 'dist');
-  await buildPortal({ output, snapshots, helper });
+  await buildPortal({ output, snapshots });
   assert.equal(JSON.parse(await readFile(path.join(output, 'app-config.json'), 'utf8')).mode, 'static-portal');
   await assert.rejects(readFile(path.join(output, '.env')));
   await assert.rejects(readFile(path.join(output, 'server', 'index.js')));
-  assert.match(await readFile(path.join(output, 'index.html'), 'utf8'), /本地助手/);
+  assert.doesNotMatch(await readFile(path.join(output, 'index.html'), 'utf8'), /本地助手|检测助手|starport:\/\//);
+  await assert.rejects(readFile(path.join(output, 'downloads', 'starport-helper-windows.zip')));
   const total = JSON.parse(await readFile(path.join(output, 'data', 'all-all-1.json'), 'utf8'));
   assert.equal(total.total, 1);
   assert.match(total.scope, /当前发布前 1 个/);

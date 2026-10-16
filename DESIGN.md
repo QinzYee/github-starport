@@ -190,3 +190,7 @@ Amber bordered notices carry data warnings and snapshot times. Empty and error r
 - **Don't** imply that Trending candidates form an exhaustive global growth ranking.
 - **Don't** require hover to reveal an essential action or state.
 - **Don't** merge Git clone and source ZIP labels; their distinct download behavior must remain visible.
+
+## Public portal refinement · 2026-10-16
+
+The user requested a quieter shell and only ZIP downloads plus clone commands. Remove the top bar, brand subtitle, decorative status dots and helper controls. Sidebar copy is a short dark introduction (18px heading, 13px body). Main heading and selection toolbar both begin at 36px on desktop; paired bulk controls share a 42px height. Each selected repository has aligned ZIP, copy-command and remove controls. Keep the optional directory field clearly scoped to generated commands. Period lists use 10 rows per page with pagination above the table. Mobile retains the selection panel after the list and gains a fixed, labeled shortcut to it once repositories are selected. No cloud download status may claim completion merely from starting a browser request.

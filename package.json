@@ -14,7 +14,7 @@
     "test": "node --test",
     "smoke": "node scripts/smoke.mjs",
     "smoke:cloud": "node scripts/smoke-cloud.mjs",
-    "check": "node --check server/index.js && node --check server/cloud.js && node --check server/github.js && node --check server/downloads.js && node --check server/archive.js && node --check server/request.js && node --check public/app.js && node --check public/portal.js && node --check public/selection.js && node --check scripts/open-link.mjs && node --check scripts/update-data.mjs && node --check scripts/build-helper.mjs && node --check scripts/build-portal.mjs",
+    "check": "node --check server/index.js && node --check server/cloud.js && node --check server/github.js && node --check server/downloads.js && node --check server/archive.js && node --check server/request.js && node --check public/app.js && node --check public/commands.js && node --check public/portal.js && node --check public/selection.js && node --check scripts/open-link.mjs && node --check scripts/update-data.mjs && node --check scripts/build-helper.mjs && node --check scripts/build-portal.mjs",
     "data:update": "node scripts/update-data.mjs",
     "build:helper": "node scripts/build-helper.mjs",
     "build:portal": "node scripts/build-portal.mjs",
